@@ -1,0 +1,33 @@
+{
+  "name": "web-audio-analyzer",
+  "version": "0.0.1",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/web-audio-analyzer.umd.cjs",
+  "module": "./dist/web-audio-analyzer.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/web-audio-analyzer.js",
+      "require": "./dist/web-audio-analyzer.umd.cjs"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^27",
+    "@types/node": "^20.0.0",
+    "jsdom": "^27.3.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^3.0.0",
+    "vitest": "^1.0.0"
+  },
+  "packageManager": "yarn@4.12.0"
+}

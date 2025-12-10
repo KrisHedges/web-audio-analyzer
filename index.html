@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Audio Analyzer Test</title>
+  </head>
+  <body>
+    <h1>Web Audio Analyzer Test</h1>
+    <p>Select an audio file to analyze.</p>
+    <input type="file" id="fileInput" accept="audio/*" />
+    <pre
+      id="output"
+      style="
+        background: #f4f4f4;
+        padding: 10px;
+        margin-top: 20px;
+        overflow-x: auto;
+      "
+    ></pre>
+
+    <script type="module">
+      import { analyzeFile } from "./src/index.ts"; // Vite handles TS import directly
+
+      const fileInput = document.getElementById("fileInput");
+      const output = document.getElementById("output");
+
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        output.textContent = "Analyzing...";
+
+        try {
+          // We create an AudioContext here if needed, or let the library create one
+                   const result = await analyzeFile(file);
+                
+                // Demo transform
+                const { transformToImpulseResponse } = await import('./src/transformer.ts');
+                const transformed = transformToImpulseResponse(result, {
+                    wav_file_url: 'impulse-responses/' + file.name,
+                    created_at: new Date().toISOString()
+                });
+
+                output.textContent = "--- Analysis ---\n" + JSON.stringify(result, null, 2) + "\n\n--- Transformed Payload ---\n" + JSON.stringify(transformed, null, 2);
+                console.log('Analysis Result:', result);
+                console.log('Transformed:', transformed);
+        } catch (err) {
+          console.error(err);
+          output.textContent = "Error: " + err.message;
+        }
+      });
+    </script>
+  </body>
+</html>
