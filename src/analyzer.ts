@@ -420,10 +420,10 @@ function computeTurbulence(envelope: number[], endFrameIdx: number): number {
     return Math.sqrt(mse / n);
 }
 function resampleArray(input: number[], targetLength: number): number[] {
-    if (input.length === 0) return new Array(targetLength).fill(0);
+    if (input.length === 0) return Array.from({ length: targetLength }, () => 0);
     if (input.length === targetLength) return input;
     
-    const output = new Array(targetLength);
+    const output = Array.from({ length: targetLength }, () => 0);
     const step = (input.length - 1) / (targetLength - 1);
     
     for (let i = 0; i < targetLength; i++) {
