@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -20,55 +20,64 @@
     ></pre>
 
     <script type="module">
-      import { analyzeFile } from "./src/index.ts"; // Vite handles TS import directly
+      import { analyzeFile } from './src/index.ts'; // Vite handles TS import directly
 
-      const fileInput = document.getElementById("fileInput");
-      const output = document.getElementById("output");
+      const fileInput = document.getElementById('fileInput');
+      const output = document.getElementById('output');
 
-      fileInput.addEventListener("change", async (e) => {
+      fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        output.textContent = "Analyzing...";
+        output.textContent = 'Analyzing...';
 
         try {
           // We create an AudioContext here if needed, or let the library create one
-                   const result = await analyzeFile(file);
-                
-                // Demo transform
-                const { transformToImpulseResponse } = await import('./src/transformer.ts');
-                const transformed = transformToImpulseResponse(result, {
-                    wav_file_url: 'impulse-responses/' + file.name,
-                    created_at: new Date().toISOString(),
-                    original_filename: file.name
-                });
+          const result = await analyzeFile(file);
 
-                output.textContent = "--- Analysis ---\n" + JSON.stringify(result, null, 2) + "\n\n--- Transformed Payload ---\n" + JSON.stringify(transformed, null, 2);
-                
-                // --- CSV Generation ---
-                function toCSV(obj) {
-                    const keys = Object.keys(obj);
-                    const values = Object.values(obj).map(value => {
-                        if (value === null || value === undefined) return "";
-                        let valStr = String(value);
-                         // Escape quotes and wrap in quotes if necessary (contains comma, newline, or double quote)
-                        if (valStr.includes(',') || valStr.includes('\n') || valStr.includes('"')) {
-                             valStr = `"${valStr.replace(/"/g, '""')}"`;
-                        }
-                        return valStr;
-                    });
-                    
-                    return keys.join(',') + '\n' + values.join(',');
-                }
+          // Demo transform
+          const { transformToImpulseResponse } =
+            await import('./src/transformer.ts');
+          const transformed = transformToImpulseResponse(result, {
+            wav_file_url: 'impulse-responses/' + file.name,
+            created_at: new Date().toISOString(),
+            original_filename: file.name,
+          });
 
-                const csvOutput = toCSV(transformed);
-                output.textContent += "\n\n--- Impulse Record CSV ---\n" + csvOutput;
+          output.textContent =
+            '--- Analysis ---\n' +
+            JSON.stringify(result, null, 2) +
+            '\n\n--- Transformed Payload ---\n' +
+            JSON.stringify(transformed, null, 2);
 
-                console.log('Analysis Result:', result);
-                console.log('Transformed:', transformed);
+          // --- CSV Generation ---
+          function toCSV(obj) {
+            const keys = Object.keys(obj);
+            const values = Object.values(obj).map((value) => {
+              if (value === null || value === undefined) return '';
+              let valStr = String(value);
+              // Escape quotes and wrap in quotes if necessary (contains comma, newline, or double quote)
+              if (
+                valStr.includes(',') ||
+                valStr.includes('\n') ||
+                valStr.includes('"')
+              ) {
+                valStr = `"${valStr.replace(/"/g, '""')}"`;
+              }
+              return valStr;
+            });
+
+            return keys.join(',') + '\n' + values.join(',');
+          }
+
+          const csvOutput = toCSV(transformed);
+          output.textContent += '\n\n--- Impulse Record CSV ---\n' + csvOutput;
+
+          console.log('Analysis Result:', result);
+          console.log('Transformed:', transformed);
         } catch (err) {
           console.error(err);
-          output.textContent = "Error: " + err.message;
+          output.textContent = 'Error: ' + err.message;
         }
       });
     </script>
