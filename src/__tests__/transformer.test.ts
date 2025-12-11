@@ -13,7 +13,6 @@ describe('Transformer', () => {
         },
         analysis_data: {
             file_meta: {
-                original_path: '/path/to/Roland SE-50 Hall.wav',
                 output_wav_path: '',
                 duration_seconds: 10
             },
@@ -34,7 +33,8 @@ describe('Transformer', () => {
     it('should transform analysis result to impulse response payload', () => {
         const payload = transformToImpulseResponse(mockResult, {
             wav_file_url: 'impulse-responses/123.wav',
-            created_at: '2025-01-01'
+            created_at: '2025-01-01',
+            original_filename: '/path/to/Roland SE-50 Hall.wav'
         });
 
 
@@ -51,10 +51,14 @@ describe('Transformer', () => {
     });
 
     it('should handle file names without brands gracefully', () => {
-         const result = { ...mockResult };
-         result.analysis_data = { ...mockResult.analysis_data, file_meta: { ...mockResult.analysis_data.file_meta, original_path: 'MyCoolSpace.wav' } };
+         // Create fresh copy of mockResult
+         const result = JSON.parse(JSON.stringify(mockResult));
          
-         const payload = transformToImpulseResponse(result, { wav_file_url: 'foo' });
+         const payload = transformToImpulseResponse(result, { 
+             wav_file_url: 'foo',
+             original_filename: 'MyCoolSpace.wav' 
+         });
+         
          expect(payload.name).toBe('MyCoolSpace');
          expect(payload.source_manufacturer).toBeNull();
     });

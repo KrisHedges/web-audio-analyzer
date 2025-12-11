@@ -1,12 +1,11 @@
 export interface Classification {
-  type: 'Reverb' | 'Echo/Delay';
+  type: 'Reverb' | 'Echo';
   duration_category: 'Short' | 'Medium' | 'Long';
-  brightness_category: 'Subsonic' | 'Very Dark' | 'Dark' | 'Low-Mid' | 'Mid' | 'High-Mid' | 'Bright' | 'Very Bright';
-  texture_category: 'Smooth' | 'Textured' | 'Grainy' | 'Echoic';
+  brightness_category: 'Sub' | 'Very Low' | 'Low' | 'Low-Mid' | 'Mid' | 'High-Mid' | 'Bright' | 'Very Bright';
+  texture_category: 'Smooth' | 'Textured' | 'Grainy' | 'Coarse' | 'Energetic';
 }
 
 export interface FileMeta {
-  original_path: string;
   output_wav_path: string;
   duration_seconds: number;
 }

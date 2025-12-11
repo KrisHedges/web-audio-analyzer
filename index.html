@@ -39,10 +39,31 @@
                 const { transformToImpulseResponse } = await import('./src/transformer.ts');
                 const transformed = transformToImpulseResponse(result, {
                     wav_file_url: 'impulse-responses/' + file.name,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    original_filename: file.name
                 });
 
                 output.textContent = "--- Analysis ---\n" + JSON.stringify(result, null, 2) + "\n\n--- Transformed Payload ---\n" + JSON.stringify(transformed, null, 2);
+                
+                // --- CSV Generation ---
+                function toCSV(obj) {
+                    const keys = Object.keys(obj);
+                    const values = Object.values(obj).map(value => {
+                        if (value === null || value === undefined) return "";
+                        let valStr = String(value);
+                         // Escape quotes and wrap in quotes if necessary (contains comma, newline, or double quote)
+                        if (valStr.includes(',') || valStr.includes('\n') || valStr.includes('"')) {
+                             valStr = `"${valStr.replace(/"/g, '""')}"`;
+                        }
+                        return valStr;
+                    });
+                    
+                    return keys.join(',') + '\n' + values.join(',');
+                }
+
+                const csvOutput = toCSV(transformed);
+                output.textContent += "\n\n--- Impulse Record CSV ---\n" + csvOutput;
+
                 console.log('Analysis Result:', result);
                 console.log('Transformed:', transformed);
         } catch (err) {

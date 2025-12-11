@@ -56,7 +56,7 @@ describe('Analyzer', () => {
     // Smooth (low turbulence)
     // Sine wave is constant amplitude (0 turbulence).
     expect(result.classification.texture_category).toBe('Smooth');
-    expect(result.classification.brightness_category).toBe('Dark');
+    expect(result.classification.brightness_category).toBe('Low');
   });
 
   it('should detect delay/echo properties', () => {
@@ -77,12 +77,17 @@ describe('Analyzer', () => {
     
     // Should have multiple peaks
     expect(result.analysis_data.musical_features.peak_count).toBeGreaterThan(1);
-    expect(result.classification.type).toBe('Echo/Delay');
+    expect(result.classification.type).toBe('Echo');
     
     // Turbulence should be high (gaps of silence)
-    // "Echoic" > 8.0? Or at least Grainy > 4.0?
+    // "Energetic" > 6.0? 
+    // "Echoic" was removed. High turbulence usually falls into Coarse or Energetic.
     // With pure silence gaps, RMSE will be massive.
-    expect(result.classification.texture_category).toBe('Echoic');
+    
+    // Note: User added logic: if high density -> Textured/Energetic.
+    // Is this high density? 3 peaks in 2 seconds = 1.5 peaks/sec. Low density.
+    // So it should just rely on turbulence value.
+    expect(result.classification.texture_category).toBe('Energetic');
   });
 
   it('should throw on empty buffer', () => {

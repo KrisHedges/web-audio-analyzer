@@ -19,7 +19,7 @@ export async function decodeAudio(file: File, context?: AudioContext): Promise<A
 export async function analyzeFile(file: File, context?: AudioContext): Promise<AnalysisResult> {
     try {
         const audioBuffer = await decodeAudio(file, context);
-        return analyzeAudioBuffer(audioBuffer, file.name);
+        return analyzeAudioBuffer(audioBuffer);
     } catch (e) {
         throw new Error(`Analysis failed: ${e instanceof Error ? e.message : String(e)}`);
     }
@@ -28,7 +28,7 @@ export async function analyzeFile(file: File, context?: AudioContext): Promise<A
 /**
  * Core analysis logic on an AudioBuffer.
  */
-export function analyzeAudioBuffer(buffer: AudioBuffer, originalFilename: string = 'audio.wav'): AnalysisResult {
+export function analyzeAudioBuffer(buffer: AudioBuffer): AnalysisResult {
     // 1. Get mono data (mixdown or first channel)
     const channelData = getMonoData(buffer);
     const sr = buffer.sampleRate;
@@ -53,7 +53,6 @@ export function analyzeAudioBuffer(buffer: AudioBuffer, originalFilename: string
     // 6. Assemble Result
     const analysisData: AnalysisData = {
         file_meta: {
-            original_path: originalFilename,
             output_wav_path: "", // Not applicable in browser flow, or could be blob URL
             duration_seconds: buffer.duration
         },
@@ -316,9 +315,9 @@ function computeEnvelopeFeatures(data: Float32Array, sr: number) {
             // Check spacing
             if (i - lastPeakIdx >= distanceFrames) {
                 // Check Prominence: Must have risen significantly from the valley since the last peak.
-                // 20% rise (1.2x) is robust for delays vs texture ripples.
+                // 20% rise (1.55x) is robust for delays vs texture ripples.
                 // Added 0.001 absolute buffer to handle near-silence ratios.
-                if (v > (minSinceLastPeak * 1.2 + 0.001)) {
+                if (v > (minSinceLastPeak * 1.55 + 0.001)) {
                     peaks++;
                     lastPeakIdx = i;
                     minSinceLastPeak = v; // Reset valley for next peak
@@ -419,6 +418,7 @@ function computeTurbulence(envelope: number[], endFrameIdx: number): number {
     
     return Math.sqrt(mse / n);
 }
+
 function resampleArray(input: number[], targetLength: number): number[] {
     if (input.length === 0) return Array.from({ length: targetLength }, () => 0);
     if (input.length === targetLength) return input;
@@ -445,7 +445,7 @@ function classify(peakCount: number, decayTime: number, centroid: number, turbul
     
     // Density Logic (Peaks per Second)
     const density = decayTime > 0 ? peakCount / decayTime : 0;
-    const isHighDensity = density > 7;
+    const isHighDensity = density > 4;
     
     // Duration Logic
     let duration: Classification['duration_category'];
@@ -455,9 +455,9 @@ function classify(peakCount: number, decayTime: number, centroid: number, turbul
     
     // Brightness Logic
     let brightness: Classification['brightness_category'];
-    if (centroid < 100) brightness = 'Subsonic';
-    else if (centroid < 400) brightness = 'Very Dark';
-    else if (centroid < 800) brightness = 'Dark';
+    if (centroid < 100) brightness = 'Sub';
+    else if (centroid < 400) brightness = 'Very Low';
+    else if (centroid < 800) brightness = 'Low';
     else if (centroid < 1200) brightness = 'Low-Mid';
     else if (centroid < 2500) brightness = 'Mid';
     else if (centroid < 4000) brightness = 'High-Mid';
@@ -467,25 +467,33 @@ function classify(peakCount: number, decayTime: number, centroid: number, turbul
     const subDb = bands["0-100hz"] || -100;
     const midDb = bands["500-2000hz"] || -100;
 
-    if (brightness === 'Dark' && subDb > midDb + 12) {
-        brightness = 'Very Dark';
+    if (brightness === 'Low' && subDb > midDb + 12) {
+        brightness = 'Very Low';
     }
-    if (brightness === 'Very Dark' && subDb > midDb + 24) {
-        brightness = 'Subsonic';
+    if (brightness === 'Very Low' && subDb > midDb + 24) {
+        brightness = 'Sub';
     }
     
     // Texture Logic (Turbulence)
     let texture: Classification['texture_category'];
-    if (turbulence < 1.5) texture = 'Smooth';
-    else if (turbulence < 2.0) texture = 'Textured';
-    else if (turbulence < 3.0) texture = 'Grainy';
-    else texture = 'Echoic';
+    if (turbulence < 3) texture = 'Smooth';
+    else if (turbulence < 4) texture = 'Textured';
+    else if (turbulence < 5) texture = 'Grainy';
+    else if (turbulence < 6) texture = 'Coarse';
+    else texture = isHighDensity ? 'Textured' : 'Energetic';
     
-    // Override: High density implies Noise/Reverb, not distinct Echoes
-    if (texture === 'Echoic' && isHighDensity) {
-        texture = 'Grainy';
-    }
-    
+    console.dir({
+        peakCount,
+        decayTime,
+        centroid,
+        turbulence,
+        density,
+        isHighDensity,
+        duration,
+        brightness,
+        texture,
+    });
+
     // Type Logic
     // Reverb is default.
     // Delay/Echo requires:
@@ -498,8 +506,8 @@ function classify(peakCount: number, decayTime: number, centroid: number, turbul
     // > 7.0 : High Density (Reverb/Noise)
     // < 1.0 : Very Low Density (Sparse Delay)
     
-    const isDelay = peakCount > 1 && !isHighDensity && (texture === 'Echoic' || density < 1.0);
-    const type: Classification['type'] = isDelay ? 'Echo/Delay' : 'Reverb';
+    const isDelay = peakCount > 1 && !isHighDensity;
+    const type: Classification['type'] = isDelay ? 'Echo' : 'Reverb';
     
     return {
         type,

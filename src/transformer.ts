@@ -37,7 +37,6 @@ export interface ImpulseResponsePayload {
     frequency_bands_db: string; // JSON string "{}"
     
     wav_file_url: string;
-    original_path: string;
 }
 
 /**
@@ -49,6 +48,7 @@ export function transformToImpulseResponse(
     extra: { 
         wav_file_url: string; 
         created_at?: string;
+        original_filename: string;
     }
 ): ImpulseResponsePayload {
     const { file_meta, musical_features, vectors } = result.analysis_data;
@@ -56,7 +56,7 @@ export function transformToImpulseResponse(
     
     // 1. Name inference
     // Remove extension and underscores
-    const originalName = file_meta.original_path.split('/').pop() || "";
+    const originalName = extra.original_filename.split('/').pop() || "";
     const name = originalName.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
     
     // 2. Manufacturer/Model inference (Simple Heuristics)
@@ -95,8 +95,7 @@ export function transformToImpulseResponse(
         amplitude_envelope: JSON.stringify(vectors.amplitude_envelope),
         frequency_bands_db: JSON.stringify(vectors.frequency_bands_db),
         
-        wav_file_url: extra.wav_file_url,
-        original_path: file_meta.original_path
+        wav_file_url: extra.wav_file_url
     };
 }
 
