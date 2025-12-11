@@ -270,10 +270,10 @@ function computeEnvelopeFeatures(data: Float32Array, sr: number) {
     const distanceFrames = Math.ceil( (50/1000) * envSr );
     
     const maxVal = Math.max(...rmsEnvelope);
-    // Relative height threshold (e.g. 10% of max peak)
-    const heightThreshold = maxVal * 0.15; 
+    // Relative height threshold (e.g. 5% of max peak)
+    const heightThreshold = maxVal * 0.05; 
     // Absolute floor for peaks (avoid noise)
-    const floorThreshold = 0.01; 
+    const floorThreshold = 0.0001; 
     const finalThreshold = Math.max(heightThreshold, floorThreshold);
     
     // Simple peak finding
@@ -481,7 +481,7 @@ function classify(peakCount: number, decayTime: number, centroid: number, turbul
     else if (turbulence < 5) texture = 'Grainy';
     else if (turbulence < 6) texture = 'Coarse';
     else texture = isHighDensity ? 'Textured' : 'Energetic';
-    
+   
     console.dir({
         peakCount,
         decayTime,
@@ -493,7 +493,7 @@ function classify(peakCount: number, decayTime: number, centroid: number, turbul
         brightness,
         texture,
     });
-
+    
     // Type Logic
     // Reverb is default.
     // Delay/Echo requires:
@@ -507,7 +507,7 @@ function classify(peakCount: number, decayTime: number, centroid: number, turbul
     // < 1.0 : Very Low Density (Sparse Delay)
     
     const isDelay = peakCount > 1 && !isHighDensity;
-    const type: Classification['type'] = isDelay ? 'Echo' : 'Reverb';
+    const type: Classification['type'] = isDelay ?  'Delay' : 'Reverb';
     
     return {
         type,

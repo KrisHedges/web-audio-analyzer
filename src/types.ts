@@ -1,5 +1,5 @@
 export interface Classification {
-  type: 'Reverb' | 'Echo';
+  type: 'Reverb' | 'Delay';
   duration_category: 'Short' | 'Medium' | 'Long';
   brightness_category: 'Sub' | 'Very Low' | 'Low' | 'Low-Mid' | 'Mid' | 'High-Mid' | 'Bright' | 'Very Bright';
   texture_category: 'Smooth' | 'Textured' | 'Grainy' | 'Coarse' | 'Energetic';

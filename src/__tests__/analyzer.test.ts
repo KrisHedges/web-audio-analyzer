@@ -77,7 +77,7 @@ describe('Analyzer', () => {
     
     // Should have multiple peaks
     expect(result.analysis_data.musical_features.peak_count).toBeGreaterThan(1);
-    expect(result.classification.type).toBe('Echo');
+    expect(result.classification.type).toBe('Delay');
     
     // Turbulence should be high (gaps of silence)
     // "Energetic" > 6.0? 
